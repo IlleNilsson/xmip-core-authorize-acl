@@ -14,6 +14,7 @@
 //! The identity judged is the accountable one, the transport identity, as
 //! ADR-0019 clause 7 has it. An attempt no entry matches is no opinion.
 
+pub use authorize::pattern::matches;
 use authorize::{Action, Attempt, Authorizer, Decision};
 use context::{AuthenticatedIdentity, IdentityFacts};
 use std::fmt;
@@ -175,33 +176,6 @@ impl Authorizer for Acl {
     }
 }
 
-/// Whether a name matches a pattern, where `*` stands for any run of
-/// characters and everything else stands for itself.
-#[must_use]
-pub fn matches(pattern: &str, name: &str) -> bool {
-    let mut pieces = pattern.split('*');
-    let Some(head) = pieces.next() else {
-        return name.is_empty();
-    };
-    let Some(mut rest) = name.strip_prefix(head) else {
-        return false;
-    };
-    let mut pieces = pieces.peekable();
-
-    while let Some(piece) = pieces.next() {
-        let last = pieces.peek().is_none();
-        if last {
-            return rest.ends_with(piece);
-        }
-        match rest.find(piece) {
-            Some(at) => rest = &rest[at + piece.len()..],
-            None => return false,
-        }
-    }
-
-    rest.is_empty()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -315,8 +289,5 @@ mod tests {
             acl().decide(&tls(None), &Attempt::new(Action::Process, "Shipping")),
             Some(Decision::Allowed)
         );
-        assert!(matches("Billing*", "Billing"));
-        assert!(matches("partner-*", "partner-x"));
-        assert!(!matches("partner-*", "Partner-x"));
     }
 }
