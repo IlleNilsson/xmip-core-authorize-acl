@@ -14,7 +14,7 @@
 //! The identity judged is the accountable one, the transport identity, as
 //! ADR-0019 clause 7 has it. An attempt no entry matches is no opinion.
 
-pub use authorize::pattern::matches;
+use authorize::pattern::matches;
 use authorize::{Action, Attempt, Authorizer, Decision};
 use context::{AuthenticatedIdentity, IdentityFacts};
 use std::fmt;
